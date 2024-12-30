@@ -115,7 +115,6 @@ public class AdvancedCalculator {
                 int funcIndex = calculation.indexOf(func);
                 int startIndex = funcIndex + func.length();
 
-                // Find the full number after the log or ln function
                 int endIndex = startIndex;
                 while (endIndex < calculation.length() && (Character.isDigit(calculation.charAt(endIndex)) ||
                         calculation.charAt(endIndex) == '.')) {
