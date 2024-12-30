@@ -1,11 +1,12 @@
-import java.util.*;
+import java.util.Arrays;
+import java.util.Scanner;
 
 @SuppressWarnings({"InfiniteLoopStatement", "ForLoopReplaceableByForEach"})
 public class AdvancedCalculator {
     public static void main(String[] args) {
         Scanner console = new Scanner(System.in);
 
-        int historyLength = 2;
+        int historyLength = 10;
         int[] historyPlacement = {0};
         String[][] history = new String[historyLength][2];
 
@@ -19,7 +20,12 @@ public class AdvancedCalculator {
         }
     }
 
-    public static void userChoice(String calculationNotClean, String[][] history, int historyLength, int[] historyPlacement){
+    public static void commands(){
+        System.out.print("\n\t~ Commands:\n\t - Commands\n\t - History\n\t - Clear History\n\t - Bye\n\t");
+    }
+
+    public static void userChoice(String calculationNotClean, String[][] history,
+                                  int historyLength, int[] historyPlacement){
         String calculation = removeSpaces(calculationNotClean);
 
         if (calculation.equalsIgnoreCase("bye")) {
@@ -35,7 +41,9 @@ public class AdvancedCalculator {
             historyClear(history, historyLength);
         }
         else if (!checkIfValid(calculation)) {
-            System.out.println("\t!! Invalid calculation !!\n");
+            System.out.println("\t\t!! Error : Improper Improper Entry !!");
+            historyFunction(calculationNotClean, "!! Error : Improper Entry !!",
+                    history, historyLength, historyPlacement);
         }
         else {
             double result = calculate(calculation);
@@ -51,6 +59,60 @@ public class AdvancedCalculator {
                 historyFunction(calculationNotClean, resultString, history, historyLength, historyPlacement);
             }
         }
+    }
+
+    public static String removeSpaces(String expression) {
+        return expression.replaceAll(" ", "");
+    }
+
+    public static void exit() {
+        System.out.print("\n\t\t\t~ Bye Bye ~");
+        System.exit(0);
+    }
+
+    public static void historyPrint(String[][] history, int historyLength){
+        System.out.println("\n\t~ History: ");
+        for (int i = 0; i < historyLength; i++) {
+            if (history[i][0] != null)
+                System.out.println("\t\t" + Arrays.toString(history[i]));
+        }
+    }
+
+    public static void historyClear(String[][] history, int historyLength){
+        for (int column = 0; column < 2; column++) {
+            for (int row = 0; row < historyLength; row++) {
+                if(history[row][column] != null) history[row][column] = null;
+                else break;
+            }
+        }
+        System.out.print("\t\t!! History Cleared !!\n");
+    }
+
+    public static void historyFunction(String calculationNotClean, String resultAny,
+                                       String[][] history, int historyLength, int[] historyPlacement){
+        history[historyPlacement[0]][0] = calculationNotClean;
+        history[historyPlacement[0]][1] = "= " + resultAny;
+        historyPlacement[0]++;
+        if(historyPlacement[0] == historyLength) historyPlacement[0] = 0;
+    }
+
+    public static boolean checkIfValid(String calculation) {
+        String validChars = "0123456789+-*/()sincostanlogln^sqrt.";
+
+        for (int i = 0; i < calculation.length(); i++) {
+            char c = calculation.charAt(i);
+            if (validChars.indexOf(c) == -1 || calculation.contains("(") && !calculation.contains(")"))
+                return false;
+        }
+        return true;
+    }
+
+    public static String errorFinder(String result){
+        return switch (result) {
+            case "-0.0" -> "!! Error : Incomplete Function / Power Operation !!";
+            case "Infinity" -> "!! Error : Division By Zero !!";
+            default -> null;
+        };
     }
 
     public static double calculate(String calculation) {
@@ -85,6 +147,7 @@ public class AdvancedCalculator {
                 while (endIndex < calculation.length() && (Character.isDigit(calculation.charAt(endIndex)) || calculation.charAt(endIndex) == '.')) {
                     endIndex++;
                 }
+
                 if(calculation.substring(startIndex, endIndex).isEmpty()) return "function error";
                 double angle = Double.parseDouble(calculation.substring(startIndex, endIndex));
 
@@ -145,13 +208,17 @@ public class AdvancedCalculator {
         return calculation;
     }
 
+    public static boolean errorCheck(String calculation){
+        return calculation.equals("power error") || calculation.equals("function error");
+    }
+
     public static String calculatePower(String calculation) {
         while (calculation.contains("^")) {
             int powerIndex = calculation.indexOf("^");
             int leftStart = powerIndex - 1;
             int rightEnd = powerIndex + 1;
 
-            if(leftStart - 1 < 0 || !Character.isDigit(calculation.charAt(leftStart)) ||
+            if(leftStart < 0 || !Character.isDigit(calculation.charAt(leftStart)) ||
                     !Character.isDigit(calculation.charAt(rightEnd)))
                 return "power error";
 
@@ -226,67 +293,5 @@ public class AdvancedCalculator {
             case '/' -> left / right;
             default -> right;
         };
-    }
-
-    public static void historyFunction(String calculationNotClean, String resultAny,
-                                       String[][] history, int historyLength, int[] historyPlacement){
-        history[historyPlacement[0]][0] = calculationNotClean;
-        history[historyPlacement[0]][1] = "= " + resultAny;
-        historyPlacement[0]++;
-        if(historyPlacement[0] == historyLength) historyPlacement[0] = 0;
-    }
-
-    public static void historyPrint(String[][] history, int historyLength){
-        System.out.println("\n\t~ History: ");
-        for (int i = 0; i < historyLength; i++) {
-            if (history[i][0] != null)
-                System.out.println("\t\t" + Arrays.toString(history[i]));
-        }
-    }
-
-    public static void historyClear(String[][] history, int historyLength){
-        for (int column = 0; column < 2; column++) {
-            for (int row = 0; row < historyLength; row++) {
-                if(history[row][column] != null) history[row][column] = null;
-                else break;
-            }
-        }
-        System.out.print("\t\t!! History Cleared !!\n");
-    }
-
-    public static String removeSpaces(String expression) {
-        return expression.replaceAll(" ", "");
-    }
-
-    public static void exit() {
-        System.out.print("\n\t\t\t~ Bye Bye ~");
-        System.exit(0);
-    }
-
-    public static void commands(){
-        System.out.print("\n\t~ Commands:\n\t - Commands\n\t - History\n\t - Clear History\n\t - Bye\n\t");
-    }
-
-    public static boolean errorCheck(String calculation){
-        return calculation.equals("power error") || calculation.equals("function error");
-    }
-
-    public static String errorFinder(String result){
-        return switch (result) {
-            case "-0.0" -> "!! Error : Incomplete Function / Power Operation !!";
-            case "Infinity" -> "!! Error : Division By Zero !!";
-            default -> null;
-        };
-    }
-
-    public static boolean checkIfValid(String calculation) {
-        String validChars = "0123456789+-*/()sincostanlogln^sqrt.";
-
-        for (int i = 0; i < calculation.length(); i++) {
-            char c = calculation.charAt(i);
-            if (validChars.indexOf(c) == -1 || calculation.contains("(") && !calculation.contains(")"))
-                return false;
-        }
-        return true;
     }
 }
