@@ -5,66 +5,55 @@ public class AdvancedCalculator {
     public static void main(String[] args) {
         Scanner console = new Scanner(System.in);
 
-        int historyLength = 10;
-        int historyPlacement = 0;
+        int historyLength = 2;
+        int[] historyPlacement = {0};
         String[][] history = new String[historyLength][2];
 
         commands();
+
         while (true) {
             System.out.print("\n> Enter your Command: ");
             String calculationNotClean = console.nextLine();
-            String calculation = removeSpaces(calculationNotClean);
 
-            if (calculation.equalsIgnoreCase("bye")) {
-                exit();
-            }
-            else if(calculation.equalsIgnoreCase("command")){
-                commands();
-            }
-            else if (calculation.equalsIgnoreCase("history")) {
-                System.out.print("\n~ History:\n");
-                for (int i = 0; i < historyLength; i++) {
-                    if (history[i][0] != null)
-                        System.out.println("\t" + Arrays.toString(history[i]));
-                }
-            }
-            else if(calculation.equalsIgnoreCase("clearhistory")){
-                for (int column = 0; column < 2; column++) {
-                    for (int row = 0; row < historyLength; row++) {
-                        if(history[row][column] != null) history[row][column] = null;
-                        else break;
-                    }
-                }
-                System.out.print("\t\t!! History Cleared !!\n");
-            }
-            else if (!checkIfValid(calculation)) {
-                System.out.println("\t!! Invalid calculation !!\n");
-            }
-            else {
-                double result = calculate(calculation);
-                System.out.println("\t~ Result: " + result);
-                history[historyPlacement][0] = calculationNotClean;
-                history[historyPlacement][1] = "= " + result;
-                historyPlacement++;
-                if(historyPlacement == historyLength) historyPlacement = 0;
-            }
+            userChoice(calculationNotClean, history, historyLength, historyPlacement);
         }
     }
 
-    public static boolean checkIfValid(String calculation) {
-        String validChars = "0123456789+-*/()sincostanlogln^sqrt.";
+    public static void userChoice(String calculationNotClean, String[][] history, int historyLength, int[] historyPlacement){
+        String calculation = removeSpaces(calculationNotClean);
 
-        for (int i = 0; i < calculation.length(); i++) {
-            char c = calculation.charAt(i);
-            if (validChars.indexOf(c) == -1 || calculation.contains("(") && !calculation.contains(")"))
-                return false;
+        if (calculation.equalsIgnoreCase("bye")) {
+            exit();
         }
-        return true;
+        else if(calculation.equalsIgnoreCase("commands")){
+            commands();
+        }
+        else if (calculation.equalsIgnoreCase("history")) {
+            historyPrint(history, historyLength);
+        }
+        else if(calculation.equalsIgnoreCase("clearhistory")){
+            historyClear(history, historyLength);
+        }
+        else if (!checkIfValid(calculation)) {
+            System.out.println("\t!! Invalid calculation !!\n");
+        }
+        else {
+            double result = calculate(calculation);
+            String resultString = String.valueOf(result);
+            resultString = errorFinder(resultString);
+
+            if(resultString == null){
+                System.out.println("\t\t~ Result: " + result);
+                historyFunction(calculationNotClean, Double.toString(result), history, historyLength, historyPlacement);
+            }
+            else {
+                System.out.println("\t\t" + resultString);
+                historyFunction(calculationNotClean, resultString, history, historyLength, historyPlacement);
+            }
+        }
     }
 
     public static double calculate(String calculation) {
-        double result;
-
         while (calculation.contains("(")) {
             int closeIndex = calculation.indexOf(")");
             int openIndex = calculation.lastIndexOf("(", closeIndex);
@@ -75,9 +64,10 @@ public class AdvancedCalculator {
         }
 
         calculation = calculateFunctions(calculation);
+        if(errorCheck(calculation)) return -0.0;
         calculation = calculatePower(calculation);
-        result = calculateSimple(calculation);
-        return result;
+        if(errorCheck(calculation)) return -0.0;
+        return calculateSimple(calculation);
     }
 
     public static String calculateFunctions(String calculation) {
@@ -95,7 +85,7 @@ public class AdvancedCalculator {
                 while (endIndex < calculation.length() && (Character.isDigit(calculation.charAt(endIndex)) || calculation.charAt(endIndex) == '.')) {
                     endIndex++;
                 }
-
+                if(calculation.substring(startIndex, endIndex).isEmpty()) return "function error";
                 double angle = Double.parseDouble(calculation.substring(startIndex, endIndex));
 
                 double trigResult = switch (func) {
@@ -161,6 +151,10 @@ public class AdvancedCalculator {
             int leftStart = powerIndex - 1;
             int rightEnd = powerIndex + 1;
 
+            if(leftStart - 1 < 0 || !Character.isDigit(calculation.charAt(leftStart)) ||
+                    !Character.isDigit(calculation.charAt(rightEnd)))
+                return "power error";
+
             while (leftStart > 0 && (Character.isDigit(calculation.charAt(leftStart - 1)) ||
                     calculation.charAt(leftStart - 1) == '.')) {
                 leftStart--;
@@ -213,8 +207,7 @@ public class AdvancedCalculator {
             }
         }
 
-        result = applyOperation(result, currentNumber, lastOperator);
-        return result;
+        return applyOperation(result, currentNumber, lastOperator);
     }
 
     public static boolean operator(char c) {
@@ -223,8 +216,7 @@ public class AdvancedCalculator {
 
     public static double applyOperation(double left, double right, char operator) {
         if (operator == '/' && right == 0) {
-            System.out.println("Error: Division by zero is not allowed.");
-            return 0;
+            return (Double.POSITIVE_INFINITY);
         }
 
         return switch (operator) {
@@ -234,6 +226,32 @@ public class AdvancedCalculator {
             case '/' -> left / right;
             default -> right;
         };
+    }
+
+    public static void historyFunction(String calculationNotClean, String resultAny,
+                                       String[][] history, int historyLength, int[] historyPlacement){
+        history[historyPlacement[0]][0] = calculationNotClean;
+        history[historyPlacement[0]][1] = "= " + resultAny;
+        historyPlacement[0]++;
+        if(historyPlacement[0] == historyLength) historyPlacement[0] = 0;
+    }
+
+    public static void historyPrint(String[][] history, int historyLength){
+        System.out.println("\n\t~ History: ");
+        for (int i = 0; i < historyLength; i++) {
+            if (history[i][0] != null)
+                System.out.println("\t\t" + Arrays.toString(history[i]));
+        }
+    }
+
+    public static void historyClear(String[][] history, int historyLength){
+        for (int column = 0; column < 2; column++) {
+            for (int row = 0; row < historyLength; row++) {
+                if(history[row][column] != null) history[row][column] = null;
+                else break;
+            }
+        }
+        System.out.print("\t\t!! History Cleared !!\n");
     }
 
     public static String removeSpaces(String expression) {
@@ -247,5 +265,28 @@ public class AdvancedCalculator {
 
     public static void commands(){
         System.out.print("\n\t~ Commands:\n\t - Commands\n\t - History\n\t - Clear History\n\t - Bye\n\t");
+    }
+
+    public static boolean errorCheck(String calculation){
+        return calculation.equals("power error") || calculation.equals("function error");
+    }
+
+    public static String errorFinder(String result){
+        return switch (result) {
+            case "-0.0" -> "!! Error : Incomplete Function / Power Operation !!";
+            case "Infinity" -> "!! Error : Division By Zero !!";
+            default -> null;
+        };
+    }
+
+    public static boolean checkIfValid(String calculation) {
+        String validChars = "0123456789+-*/()sincostanlogln^sqrt.";
+
+        for (int i = 0; i < calculation.length(); i++) {
+            char c = calculation.charAt(i);
+            if (validChars.indexOf(c) == -1 || calculation.contains("(") && !calculation.contains(")"))
+                return false;
+        }
+        return true;
     }
 }
