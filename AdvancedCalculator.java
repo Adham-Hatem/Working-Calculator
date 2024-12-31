@@ -41,7 +41,7 @@ public class AdvancedCalculator {
             historyClear(history, historyLength);
         }
         else if (!checkIfValid(calculation)) {
-            System.out.println("\t\t!! Error : Improper Improper Entry !!");
+            System.out.println("\t\t!! Error : Improper Entry !!");
             historyFunction(calculationNotClean, "!! Error : Improper Entry !!",
                     history, historyLength, historyPlacement);
         }
@@ -62,7 +62,7 @@ public class AdvancedCalculator {
     }
 
     public static String removeSpaces(String expression) {
-        return expression.replaceAll(" ", "");
+        return expression.toLowerCase().replaceAll(" ", "");
     }
 
     public static void exit() {
