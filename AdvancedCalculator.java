@@ -110,7 +110,8 @@ public class AdvancedCalculator {
     public static String errorFinder(String result){
         return switch (result) {
             case "-0.0" -> "!! Error : Incomplete Function / Power Operation !!";
-            case "Infinity" -> "!! Error : Division By Zero !!";
+            case "Infinity" -> "!! Error : Zero Division !!";
+            case "-Infinity" -> "!! Error : Complex Error !!";
             default -> null;
         };
     }
@@ -126,9 +127,19 @@ public class AdvancedCalculator {
         }
 
         calculation = calculateFunctions(calculation);
-        if(errorCheck(calculation)) return -0.0;
+
+        if(errorCheck(calculation).equals("powerErr") || errorCheck(calculation).equals("functionErr"))
+            return -0.0;
+        else if (errorCheck(calculation).equals("complexErr"))
+            return Double.NEGATIVE_INFINITY;
+
         calculation = calculatePower(calculation);
-        if(errorCheck(calculation)) return -0.0;
+
+        if(errorCheck(calculation).equals("powerErr") || errorCheck(calculation).equals("functionErr"))
+            return -0.0;
+        else if (errorCheck(calculation).equals("complexErr"))
+            return Double.NEGATIVE_INFINITY;
+
         return calculateSimple(calculation);
     }
 
@@ -150,6 +161,7 @@ public class AdvancedCalculator {
 
                 if(calculation.substring(startIndex, endIndex).isEmpty()) return "function error";
                 double angle = Double.parseDouble(calculation.substring(startIndex, endIndex));
+                if(angle == 90) return "complex error";
 
                 double trigResult = switch (func) {
                     case "sin" -> Math.sin(Math.toRadians(angle));
@@ -208,8 +220,13 @@ public class AdvancedCalculator {
         return calculation;
     }
 
-    public static boolean errorCheck(String calculation){
-        return calculation.equals("power error") || calculation.equals("function error");
+    public static String errorCheck(String calculation){
+        return switch (calculation) {
+            case "power error" -> "powerErr";
+            case "function error" -> "functionErr";
+            case "complex error" -> "complexErr";
+            default -> calculation;
+        };
     }
 
     public static String calculatePower(String calculation) {
