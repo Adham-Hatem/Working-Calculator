@@ -41,6 +41,7 @@ public class AdvancedCalculator {
             historyClear(history, historyLength);
         }
         else if (!checkIfValid(calculation).equals("valid")) {
+            System.out.print(calculation);
             System.out.println("\t\t" + errorFinder(checkIfValid(calculation)));
 
             historyFunction(calculationNotClean, errorFinder(checkIfValid(calculation)),
@@ -49,10 +50,6 @@ public class AdvancedCalculator {
         else {
             String result = calculate(calculation);
 
-            if (result.equals(calculationNotClean))
-                result = "improperEntry";
-
-            System.out.print(result + "---" + calculationNotClean);
             if(!errorChecker(result)){
                 System.out.println("\t\t~ Result: " + result);
                 historyFunction(calculationNotClean, errorFinder(result), history, historyLength, historyPlacement);
@@ -100,17 +97,7 @@ public class AdvancedCalculator {
     }
 
     public static String checkIfValid(String calculation) {
-        String validChars = "0123456789+-*/()^.";
-        String[] validFunctions = {"sin", "cos", "tan", "sqrt", "ln", "log"};
-        String validFunctionsString = "sincostansqrtlnlog";
-
-        for (int i = 0; i < validFunctions.length; i++) {
-            char c = calculation.charAt(i);
-            String func = validFunctions[i];
-
-            if (!calculation.contains(func) && validFunctionsString.indexOf(c) != -1)
-                return "improperEntry";
-        }
+        String validChars = "0123456789+-*/()^.sincostansqrtlnlog";
 
         for (int i = 0; i < calculation.length(); i++) {
             char c = calculation.charAt(i);
@@ -178,21 +165,24 @@ public class AdvancedCalculator {
         String[] trigFunctions = {"sin", "cos", "tan"};
         String[] logFunctions = {"log", "ln"};
         String[] sqrtFunctions = {"sqrt"};
+        String letters = "abcdefghijklmnopqrstuvwxyz";
 
         for (int i = 0; i < trigFunctions.length; i++) {
             String func = trigFunctions[i];
+
             while (calculation.contains(func)) {
                 int funcIndex = calculation.indexOf(func);
                 int startIndex = funcIndex + func.length();
                 int endIndex = startIndex;
 
-                while (endIndex < calculation.length() && (Character.isDigit(calculation.charAt(endIndex)) || calculation.charAt(endIndex) == '.')) {
+                while (endIndex < calculation.length() && (Character.isDigit(calculation.charAt(endIndex))
+                        || calculation.charAt(endIndex) == '.')) {
                     endIndex++;
                 }
 
-                if(calculation.substring(startIndex, endIndex).isEmpty()) return "functionErr";
+                if (calculation.substring(startIndex, endIndex).isEmpty()) return "functionErr";
                 double angle = Double.parseDouble(calculation.substring(startIndex, endIndex));
-                if(angle == 90 && func.equals("tan")) return "complexErr";
+                if (angle == 90 && func.equals("tan")) return "complexErr";
 
                 double trigResult = switch (func) {
                     case "sin" -> Math.sin(Math.toRadians(angle));
@@ -202,6 +192,7 @@ public class AdvancedCalculator {
                 };
 
                 calculation = calculation.substring(0, funcIndex) + trigResult + calculation.substring(endIndex);
+
             }
         }
 
@@ -251,6 +242,13 @@ public class AdvancedCalculator {
                 double sqrtResult = Math.sqrt(value);
                 calculation = calculation.substring(0, funcIndex) + sqrtResult + calculation.substring(sqrtRight);
             }
+        }
+
+        for (int index = 0; index < calculation.length(); index++) {
+            char character = calculation.charAt(index);
+
+            if (letters.indexOf(character) != -1)
+                return "improperEntry";
         }
 
         return calculation;
