@@ -40,23 +40,26 @@ public class AdvancedCalculator {
         else if(calculation.equalsIgnoreCase("clearhistory")){
             historyClear(history, historyLength);
         }
-        else if (!checkIfValid(calculation)) {
-            System.out.println("\t\t!! Error : Improper Entry !!");
-            historyFunction(calculationNotClean, "!! Error : Improper Entry !!",
+        else if (!checkIfValid(calculation).equals("valid")) {
+            System.out.println("\t\t" + errorFinder(checkIfValid(calculation)));
+
+            historyFunction(calculationNotClean, errorFinder(checkIfValid(calculation)),
                     history, historyLength, historyPlacement);
         }
         else {
-            double result = calculate(calculation);
-            String resultString = String.valueOf(result);
-            resultString = errorFinder(resultString);
+            String result = calculate(calculation);
 
-            if(resultString == null){
+            if (result.equals(calculationNotClean))
+                result = "improperEntry";
+
+            System.out.print(result + "---" + calculationNotClean);
+            if(!errorChecker(result)){
                 System.out.println("\t\t~ Result: " + result);
-                historyFunction(calculationNotClean, Double.toString(result), history, historyLength, historyPlacement);
+                historyFunction(calculationNotClean, errorFinder(result), history, historyLength, historyPlacement);
             }
             else {
-                System.out.println("\t\t" + resultString);
-                historyFunction(calculationNotClean, resultString, history, historyLength, historyPlacement);
+                System.out.println("\t\t" + errorFinder(result));
+                historyFunction(calculationNotClean, errorFinder(result), history, historyLength, historyPlacement);
             }
         }
     }
@@ -96,49 +99,77 @@ public class AdvancedCalculator {
         if(historyPlacement[0] == historyLength) historyPlacement[0] = 0;
     }
 
-    public static boolean checkIfValid(String calculation) {
-        String validChars = "0123456789+-*/()sincostanlogln^sqrt.";
+    public static String checkIfValid(String calculation) {
+        String validChars = "0123456789+-*/()^.";
+        String[] validFunctions = {"sin", "cos", "tan", "sqrt", "ln", "log"};
+        String validFunctionsString = "sincostansqrtlnlog";
+
+        for (int i = 0; i < validFunctions.length; i++) {
+            char c = calculation.charAt(i);
+            String func = validFunctions[i];
+
+            if (!calculation.contains(func) && validFunctionsString.indexOf(c) != -1)
+                return "improperEntry";
+        }
 
         for (int i = 0; i < calculation.length(); i++) {
             char c = calculation.charAt(i);
-            if (validChars.indexOf(c) == -1 || calculation.contains("(") && !calculation.contains(")"))
-                return false;
+            if (calculation.contains("(") && !calculation.contains(")"))
+                return "bracketErr";
+            else if (validChars.indexOf(c) == -1) {
+                return "improperEntry";
+            }
         }
-        return true;
+
+        return switch (calculation.charAt(0)) {
+            case '/', '*', '^' -> "placementErr";
+            default -> switch (calculation.charAt(calculation.length()-1)) {
+                            case '/', '*', '^', 't' -> "placementErr";
+                            default -> "valid";
+            };
+        };
     }
 
     public static String errorFinder(String result){
         return switch (result) {
-            case "-0.0" -> "!! Error : Incomplete Function / Power Operation !!";
-            case "Infinity" -> "!! Error : Zero Division !!";
-            case "-Infinity" -> "!! Error : Complex Error !!";
+            case "functionErr" -> "!! Error : Function Error !!";
+            case "powerErr" ->  "!! Error : Power Error !!";
+            case "multiplicationErr" -> "!! Error : Multiplication Error !!";
+            case "zeroDivision" -> "!! Error : Zero Division !!";
+            case "complexErr" -> "!! Error : Complex Error !!";
+            case "placementErr" -> "!! Error : Placement Error !!";
+            case "bracketErr" -> "!! Error : Bracket Error !!";
+            case "sqrtErr" -> "!! Error : Square Root Error !!";
+            case "improperEntry" -> "!! Error : Improper Entry !!";
             default -> null;
         };
     }
 
-    public static double calculate(String calculation) {
+    public static boolean errorChecker(String result){
+        return switch (result) {
+            case "functionErr", "powerErr", "zeroDivision", "complexErr", "placementErr",
+                 "multiplicationErr", "bracketErr" ,"sqrtErr", "improperEntry" -> true;
+            default -> false;
+        };
+    }
+
+    public static String calculate(String calculation) {
         while (calculation.contains("(")) {
             int closeIndex = calculation.indexOf(")");
             int openIndex = calculation.lastIndexOf("(", closeIndex);
             String subExpression = calculation.substring(openIndex + 1, closeIndex);
-            double subResult = calculate(subExpression);
+            double subResult = Double.parseDouble(calculate(subExpression));
             calculation = calculation.substring(0, openIndex)
                     + subResult + calculation.substring(closeIndex + 1);
         }
 
         calculation = calculateFunctions(calculation);
 
-        if(errorCheck(calculation).equals("powerErr") || errorCheck(calculation).equals("functionErr"))
-            return -0.0;
-        else if (errorCheck(calculation).equals("complexErr"))
-            return Double.NEGATIVE_INFINITY;
+        if (errorChecker(calculation)) return calculation;
 
         calculation = calculatePower(calculation);
 
-        if(errorCheck(calculation).equals("powerErr") || errorCheck(calculation).equals("functionErr"))
-            return -0.0;
-        else if (errorCheck(calculation).equals("complexErr"))
-            return Double.NEGATIVE_INFINITY;
+        if (errorChecker(calculation)) return calculation;
 
         return calculateSimple(calculation);
     }
@@ -159,9 +190,9 @@ public class AdvancedCalculator {
                     endIndex++;
                 }
 
-                if(calculation.substring(startIndex, endIndex).isEmpty()) return "function error";
+                if(calculation.substring(startIndex, endIndex).isEmpty()) return "functionErr";
                 double angle = Double.parseDouble(calculation.substring(startIndex, endIndex));
-                if(angle == 90) return "complex error";
+                if(angle == 90 && func.equals("tan")) return "complexErr";
 
                 double trigResult = switch (func) {
                     case "sin" -> Math.sin(Math.toRadians(angle));
@@ -202,31 +233,27 @@ public class AdvancedCalculator {
             String func = sqrtFunctions[i];
             while (calculation.contains(func)) {
                 int funcIndex = calculation.indexOf(func);
-                int startIndex = funcIndex + func.length();
+                int sqrtLeft = funcIndex + func.length();
+                int sqrtRight = sqrtLeft;
 
-                int endIndex = startIndex;
-                while (endIndex < calculation.length() && (Character.isDigit(calculation.charAt(endIndex)) ||
-                        calculation.charAt(endIndex) == '.')) {
-                    endIndex++;
+
+
+                while (sqrtRight < calculation.length() && (Character.isDigit(calculation.charAt(sqrtRight)) ||
+                        calculation.charAt(sqrtRight) == '.')) {
+                    sqrtRight++;
                 }
 
-                double value = Double.parseDouble(calculation.substring(startIndex, endIndex));
+                if (!Character.isDigit(calculation.charAt(sqrtRight)) || calculation.charAt(sqrtLeft) == '-')
+                    return "sqrtErr";
+
+                double value = Double.parseDouble(calculation.substring(sqrtLeft, sqrtRight));
 
                 double sqrtResult = Math.sqrt(value);
-                calculation = calculation.substring(0, funcIndex) + sqrtResult + calculation.substring(endIndex);
+                calculation = calculation.substring(0, funcIndex) + sqrtResult + calculation.substring(sqrtRight);
             }
         }
 
         return calculation;
-    }
-
-    public static String errorCheck(String calculation){
-        return switch (calculation) {
-            case "power error" -> "powerErr";
-            case "function error" -> "functionErr";
-            case "complex error" -> "complexErr";
-            default -> calculation;
-        };
     }
 
     public static String calculatePower(String calculation) {
@@ -235,9 +262,9 @@ public class AdvancedCalculator {
             int leftStart = powerIndex - 1;
             int rightEnd = powerIndex + 1;
 
-            if(leftStart < 0 || !Character.isDigit(calculation.charAt(leftStart)) ||
+            if (leftStart < 0 || !Character.isDigit(calculation.charAt(leftStart)) ||
                     !Character.isDigit(calculation.charAt(rightEnd)))
-                return "power error";
+                return "powerErr";
 
             while (leftStart > 0 && (Character.isDigit(calculation.charAt(leftStart - 1)) ||
                     calculation.charAt(leftStart - 1) == '.')) {
@@ -260,34 +287,87 @@ public class AdvancedCalculator {
         return calculation;
     }
 
-    public static double calculateSimple(String calculation) {
+    public static String calculateSimple(String calculation) {
         double result = 0;
-        char lastOperator = '+';
         double currentNumber = 0;
-        boolean inDecimal = false;
         double decimalPlace = 0.1;
+        char lastOperator = '+';
+        boolean inDecimal = false;
+        String divisionLeft;
+        String divisionRight;
 
-        for (int i = 0; i < calculation.length(); i++) {
-            char c = calculation.charAt(i);
 
-            if (Character.isDigit(c)) {
+        for (int multiplicationIndex = 0; multiplicationIndex < calculation.length(); multiplicationIndex++) {
+            char chosenChar = calculation.charAt(multiplicationIndex);
+
+            if (chosenChar == '*'){
+                int multiplicationLeft = multiplicationIndex-1;
+                int multiplicationRight = multiplicationIndex+1;
+
+                while (multiplicationLeft > 0 && (Character.isDigit(calculation.charAt(multiplicationLeft)) ||
+                        calculation.charAt(multiplicationLeft - 1) == '.')) {
+                    multiplicationLeft--;
+                }
+
+                while (multiplicationRight < calculation.length() && (Character.isDigit
+                        (calculation.charAt(multiplicationRight)) || calculation.charAt(multiplicationRight) == '.')) {
+                    multiplicationRight++;
+                }
+
+                System.out.print(multiplicationLeft + "---" + multiplicationRight);
+                if (multiplicationLeft < 0 || !Character.isDigit(calculation.charAt(multiplicationLeft)) ||
+                        !Character.isDigit(calculation.charAt(multiplicationRight)))
+                    return "multiplicationErr";
+
+                double leftHandSide = Double.parseDouble(calculation.substring(multiplicationLeft,
+                        multiplicationIndex));
+                double rightHandSide = Double.parseDouble(calculation.substring(multiplicationIndex+1,
+                        multiplicationRight));
+
+                double multiplicationResult = leftHandSide * rightHandSide;
+
+                calculation = calculation.substring(0, multiplicationLeft) + multiplicationResult +
+                        calculation.substring(multiplicationRight);
+            }
+        }
+
+        for (int index = 0; index < calculation.length(); index++) {
+            char chosenChar = calculation.charAt(index);
+
+            if (Character.isDigit(chosenChar)) {
                 if (inDecimal) {
-                    currentNumber += (c - '0') * decimalPlace;
+                    currentNumber += (chosenChar - '0') * decimalPlace;
                     decimalPlace *= 0.1;
                 }
                 else {
-                    currentNumber = currentNumber * 10 + (c - '0');
+                    currentNumber = currentNumber * 10 + (chosenChar - '0');
                 }
             }
-            else if (c == '.') {
+            else if (chosenChar == '.') {
                 inDecimal = true;
                 decimalPlace = 0.1;
             }
-            else if (operator(c)) {
-                result = applyOperation(result, currentNumber, lastOperator);
-                currentNumber = 0;
-                inDecimal = false;
-                lastOperator = c;
+            else if (chosenChar == '/') {
+                divisionLeft = calculation.substring(0, calculation.indexOf('/'));
+                divisionRight = calculation.substring(calculation.indexOf('/')+1);
+
+                divisionLeft = calculateSimple(divisionLeft);
+                divisionRight = calculateSimple(divisionRight);
+
+                if (divisionRight.equals("0.0"))
+                    return "zeroDivision";
+
+                return Double.toString(Double.parseDouble(divisionLeft)/Double.parseDouble(divisionRight));
+            }
+            else if (operator(chosenChar)) {
+                String resultString = applyOperation(result, currentNumber, lastOperator);
+                if (errorFinder(resultString) == null){
+                    result = Double.parseDouble(applyOperation(result, currentNumber, lastOperator));
+                    currentNumber = 0;
+                    inDecimal = false;
+                    lastOperator = chosenChar;
+                }
+                else return resultString;
             }
         }
 
@@ -295,20 +375,15 @@ public class AdvancedCalculator {
     }
 
     public static boolean operator(char c) {
-        return c == '+' || c == '-' || c == '*' || c == '/';
+        return c == '+' || c == '-' || c == '*';
     }
 
-    public static double applyOperation(double left, double right, char operator) {
-        if (operator == '/' && right == 0) {
-            return (Double.POSITIVE_INFINITY);
-        }
+    public static String applyOperation(double left, double right, char operator) {
 
         return switch (operator) {
-            case '+' -> left + right;
-            case '-' -> left - right;
-            case '*' -> left * right;
-            case '/' -> left / right;
-            default -> right;
+            case '+' -> Double.toString(left + right);
+            case '-' -> Double.toString(left - right);
+            default -> Double.toString(right);
         };
     }
 }
