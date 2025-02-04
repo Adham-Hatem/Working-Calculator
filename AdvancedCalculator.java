@@ -312,9 +312,8 @@ public class AdvancedCalculator {
                     multiplicationRight++;
                 }
 
-                System.out.print(multiplicationLeft + "---" + multiplicationRight);
                 if (multiplicationLeft < 0 || !Character.isDigit(calculation.charAt(multiplicationLeft)) ||
-                        !Character.isDigit(calculation.charAt(multiplicationRight)))
+                        !Character.isDigit(calculation.charAt(multiplicationRight - 1)))
                     return "multiplicationErr";
 
                 double leftHandSide = Double.parseDouble(calculation.substring(multiplicationLeft,
