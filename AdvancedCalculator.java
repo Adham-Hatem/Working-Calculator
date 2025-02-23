@@ -1,11 +1,11 @@
-import java.util.Arrays;
 import java.util.Scanner;
 
-@SuppressWarnings({"InfiniteLoopStatement", "ForLoopReplaceableByForEach"})
+@SuppressWarnings({"InfiniteLoopStatement", "ForLoopReplaceableByForEach", "DuplicatedCode"})
 public class AdvancedCalculator {
     public static void main(String[] args) {
         Scanner console = new Scanner(System.in);
 
+        // History Specifications:
         int historyLength = 10;
         int[] historyPlacement = {0};
         String[][] history = new String[historyLength][2];
@@ -52,7 +52,7 @@ public class AdvancedCalculator {
 
             if(!errorChecker(result)){
                 System.out.println("\t\t~ Result: " + result);
-                historyFunction(calculationNotClean, errorFinder(result), history, historyLength, historyPlacement);
+                historyFunction(calculationNotClean, result, history, historyLength, historyPlacement);
             }
             else {
                 System.out.println("\t\t" + errorFinder(result));
@@ -74,7 +74,7 @@ public class AdvancedCalculator {
         System.out.println("\n\t~ History: ");
         for (int i = 0; i < historyLength; i++) {
             if (history[i][0] != null)
-                System.out.println("\t\t" + Arrays.toString(history[i]));
+                System.out.println("\t\t" + "- " + history[i][0] + history[i][1]);
         }
     }
 
@@ -91,7 +91,7 @@ public class AdvancedCalculator {
     public static void historyFunction(String calculationNotClean, String resultAny,
                                        String[][] history, int historyLength, int[] historyPlacement){
         history[historyPlacement[0]][0] = calculationNotClean;
-        history[historyPlacement[0]][1] = "= " + resultAny;
+        history[historyPlacement[0]][1] = " = " + resultAny;
         historyPlacement[0]++;
         if(historyPlacement[0] == historyLength) historyPlacement[0] = 0;
     }
@@ -168,11 +168,11 @@ public class AdvancedCalculator {
         String letters = "abcdefghijklmnopqrstuvwxyz";
 
         for (int i = 0; i < trigFunctions.length; i++) {
-            String func = trigFunctions[i];
+            String function = trigFunctions[i];
 
-            while (calculation.contains(func)) {
-                int funcIndex = calculation.indexOf(func);
-                int startIndex = funcIndex + func.length();
+            while (calculation.contains(function)) {
+                int functionIndex = calculation.indexOf(function);
+                int startIndex = functionIndex + function.length();
                 int endIndex = startIndex;
 
                 while (endIndex < calculation.length() && (Character.isDigit(calculation.charAt(endIndex))
@@ -182,27 +182,27 @@ public class AdvancedCalculator {
 
                 if (calculation.substring(startIndex, endIndex).isEmpty()) return "functionErr";
                 double angle = Double.parseDouble(calculation.substring(startIndex, endIndex));
-                if (angle == 90 && func.equals("tan")) return "complexErr";
+                if (angle == 90 && function.equals("tan")) return "complexErr";
 
-                double trigResult = switch (func) {
+                double trigResult = switch (function) {
                     case "sin" -> Math.sin(Math.toRadians(angle));
                     case "cos" -> Math.cos(Math.toRadians(angle));
                     case "tan" -> Math.tan(Math.toRadians(angle));
                     default -> 0;
                 };
 
-                calculation = calculation.substring(0, funcIndex) + trigResult + calculation.substring(endIndex);
+                calculation = calculation.substring(0, functionIndex) + trigResult + calculation.substring(endIndex);
 
             }
         }
 
         for (int i = 0; i < logFunctions.length; i++) {
-            String func = logFunctions[i];
-            while (calculation.contains(func)) {
-                int funcIndex = calculation.indexOf(func);
-                int startIndex = funcIndex + func.length();
-
+            String function = logFunctions[i];
+            while (calculation.contains(function)) {
+                int functionIndex = calculation.indexOf(function);
+                int startIndex = functionIndex + function.length();
                 int endIndex = startIndex;
+
                 while (endIndex < calculation.length() && (Character.isDigit(calculation.charAt(endIndex)) ||
                         calculation.charAt(endIndex) == '.')) {
                     endIndex++;
@@ -210,24 +210,22 @@ public class AdvancedCalculator {
 
                 double value = Double.parseDouble(calculation.substring(startIndex, endIndex));
 
-                double logResult = switch (func) {
+                double logResult = switch (function) {
                     case "log" -> Math.log10(value);
                     case "ln" -> Math.log(value);
                     default -> 0;
                 };
 
-                calculation = calculation.substring(0, funcIndex) + logResult + calculation.substring(endIndex);
+                calculation = calculation.substring(0, functionIndex) + logResult + calculation.substring(endIndex);
             }
         }
 
         for (int i = 0; i < sqrtFunctions.length; i++) {
-            String func = sqrtFunctions[i];
-            while (calculation.contains(func)) {
-                int funcIndex = calculation.indexOf(func);
-                int sqrtLeft = funcIndex + func.length();
+            String function = sqrtFunctions[i];
+            while (calculation.contains(function)) {
+                int functionIndex = calculation.indexOf(function);
+                int sqrtLeft = functionIndex + function.length();
                 int sqrtRight = sqrtLeft;
-
-
 
                 while (sqrtRight < calculation.length() && (Character.isDigit(calculation.charAt(sqrtRight)) ||
                         calculation.charAt(sqrtRight) == '.')) {
@@ -240,7 +238,7 @@ public class AdvancedCalculator {
                 double value = Double.parseDouble(calculation.substring(sqrtLeft, sqrtRight));
 
                 double sqrtResult = Math.sqrt(value);
-                calculation = calculation.substring(0, funcIndex) + sqrtResult + calculation.substring(sqrtRight);
+                calculation = calculation.substring(0, functionIndex) + sqrtResult + calculation.substring(sqrtRight);
             }
         }
 
