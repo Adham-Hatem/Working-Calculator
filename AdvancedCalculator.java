@@ -1,6 +1,6 @@
 import java.util.Scanner;
 
-@SuppressWarnings({"InfiniteLoopStatement", "ForLoopReplaceableByForEach", "DuplicatedCode"})
+@SuppressWarnings({"InfiniteLoopStatement", "ForLoopReplaceableByForEach", "DuplicatedCode", "TextBlockMigration"})
 public class AdvancedCalculator {
     public static void main(String[] args) {
         Scanner console = new Scanner(System.in);
@@ -10,7 +10,7 @@ public class AdvancedCalculator {
         int[] historyPlacement = {0};
         String[][] history = new String[historyLength][2];
 
-        commands();
+        commands("start");
 
         while (true) {
             System.out.print("\n> Enter your Command: ");
@@ -20,8 +20,23 @@ public class AdvancedCalculator {
         }
     }
 
-    public static void commands(){
-        System.out.print("\n\t~ Commands:\n\t - Commands\n\t - History\n\t - Clear History\n\t - Bye\n\t");
+    public static void commands(String instance){
+        switch (instance) {
+            case "start":
+                System.out.print("\n\t~ Commands:\n\t - Commands\n\t - History\n\t - Clear History\n\t - Bye\n\t");
+                break;
+            case "implemented":
+                System.out.print("\n\t~ Available Calculations:" +
+                        "\n\t - Multiplication > * <" +
+                        "\n\t - Division > / <" +
+                        "\n\t - Subtraction > - <" +
+                        "\n\t - Addition > + <" +
+                        "\n\t - Squaring > ^ <" +
+                        "\n\t - SquareRoot > sqrt <" +
+                        "\n\t - Logarithmic Operations > Log, ln <" +
+                        "\n\t - Trigonometric Functions > sin, cos, tan <\n\t");
+                break;
+        }
     }
 
     public static void userChoice(String calculationNotClean, String[][] history,
@@ -32,7 +47,7 @@ public class AdvancedCalculator {
             exit();
         }
         else if(calculation.equalsIgnoreCase("commands")){
-            commands();
+            commands("implemented");
         }
         else if (calculation.equalsIgnoreCase("history")) {
             historyPrint(history, historyLength);
@@ -145,7 +160,7 @@ public class AdvancedCalculator {
             int closeIndex = calculation.indexOf(")");
             int openIndex = calculation.lastIndexOf("(", closeIndex);
             String subExpression = calculation.substring(openIndex + 1, closeIndex);
-            double subResult = Double.parseDouble(calculate(subExpression));
+            String subResult = calculate(subExpression);
             calculation = calculation.substring(0, openIndex)
                     + subResult + calculation.substring(closeIndex + 1);
         }
@@ -297,8 +312,8 @@ public class AdvancedCalculator {
             char chosenChar = calculation.charAt(multiplicationIndex);
 
             if (chosenChar == '*'){
-                int multiplicationLeft = multiplicationIndex-1;
-                int multiplicationRight = multiplicationIndex+1;
+                int multiplicationLeft = multiplicationIndex - 1;
+                int multiplicationRight = multiplicationIndex + 2;
 
                 while (multiplicationLeft > 0 && (Character.isDigit(calculation.charAt(multiplicationLeft)) ||
                         calculation.charAt(multiplicationLeft) == '.')) {
@@ -309,16 +324,20 @@ public class AdvancedCalculator {
                     multiplicationLeft++;
 
                 while (multiplicationRight < calculation.length() && (Character.isDigit
-                        (calculation.charAt(multiplicationRight)) || calculation.charAt(multiplicationRight) == '.')) {
+                        (calculation.charAt(multiplicationRight - 1)) || calculation.charAt(multiplicationRight - 1) == '.') ||
+                        calculation.charAt(multiplicationRight - 1) == '-') {
                     multiplicationRight++;
                 }
 
                 if (multiplicationLeft < 0 || !Character.isDigit(calculation.charAt(multiplicationLeft)) ||
-                        !Character.isDigit(calculation.charAt(multiplicationRight - 1)))
-                    return "multiplicationErr";
+                        !Character.isDigit(calculation.charAt(multiplicationIndex)))
+                    if (calculation.charAt(multiplicationIndex) == '-')
+                        if (!Character.isDigit(calculation.charAt(multiplicationIndex + 1)))
+                            return "multiplicationErr";
 
                 double leftHandSide = Double.parseDouble(calculation.substring(multiplicationLeft,
                         multiplicationIndex));
+
                 double rightHandSide = Double.parseDouble(calculation.substring(multiplicationIndex+1,
                         multiplicationRight));
 
