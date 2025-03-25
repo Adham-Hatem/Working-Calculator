@@ -111,8 +111,8 @@ public class AdvancedCalculator {
         return switch (calculation.charAt(0)) {
             case '/', '*', '^' -> "placementErr";
             default -> switch (calculation.charAt(calculation.length()-1)) {
-                            case '/', '*', '^', 't' -> "placementErr";
-                            default -> "valid";
+                case '/', '*', '^', 't' -> "placementErr";
+                default -> "valid";
             };
         };
     }
@@ -232,7 +232,7 @@ public class AdvancedCalculator {
                     sqrtRight++;
                 }
 
-                if (!Character.isDigit(calculation.charAt(sqrtRight)) || calculation.charAt(sqrtLeft) == '-')
+                if (!Character.isDigit(calculation.charAt(sqrtRight - 1)) || calculation.charAt(sqrtLeft) == '-')
                     return "sqrtErr";
 
                 double value = Double.parseDouble(calculation.substring(sqrtLeft, sqrtRight));
@@ -301,9 +301,12 @@ public class AdvancedCalculator {
                 int multiplicationRight = multiplicationIndex+1;
 
                 while (multiplicationLeft > 0 && (Character.isDigit(calculation.charAt(multiplicationLeft)) ||
-                        calculation.charAt(multiplicationLeft - 1) == '.')) {
+                        calculation.charAt(multiplicationLeft) == '.')) {
                     multiplicationLeft--;
                 }
+
+                if (!Character.isDigit(calculation.charAt(multiplicationLeft)))
+                    multiplicationLeft++;
 
                 while (multiplicationRight < calculation.length() && (Character.isDigit
                         (calculation.charAt(multiplicationRight)) || calculation.charAt(multiplicationRight) == '.')) {
