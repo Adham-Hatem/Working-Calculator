@@ -1,14 +1,16 @@
+import java.io.*;
+import java.util.ArrayList;
 import java.util.Scanner;
 
-@SuppressWarnings({"InfiniteLoopStatement", "DuplicatedCode", "TextBlockMigration"})
+@SuppressWarnings({"InfiniteLoopStatement", "DuplicatedCode", "TextBlockMigration", "ForLoopReplaceableByForEach"})
 public class AdvancedCalculator {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         Scanner console = new Scanner(System.in);
-
         // History Specifications:
-        int historyLength = 10;
-        int[] historyPlacement = {0};
-        String[][] history = new String[historyLength][2];
+        File history = new File("history.txt");
+        int historyLength = 5;
+        historyFileCreation(history, historyLength);
+        int[] historyPlacement = {getPlacement(history, historyLength)};
 
         commands("start");
 
@@ -16,7 +18,7 @@ public class AdvancedCalculator {
             System.out.print("\n> Enter your Command: ");
             String calculationNotClean = console.nextLine();
 
-            userChoice(calculationNotClean, history, historyLength, historyPlacement);
+            userChoice(calculationNotClean, history ,historyLength, historyPlacement);
         }
     }
 
@@ -40,8 +42,8 @@ public class AdvancedCalculator {
         }
     }
 
-    public static void userChoice(String calculationNotClean, String[][] history,
-                                  int historyLength, int[] historyPlacement){
+    public static void userChoice(String calculationNotClean, File history,
+                                  int historyLength, int[] historyPlacement) throws IOException {
         String calculation = removeSpaces(calculationNotClean);
 
         if (calculation.equalsIgnoreCase("bye")) {
@@ -51,32 +53,44 @@ public class AdvancedCalculator {
             commands("implemented");
         }
         else if (calculation.equalsIgnoreCase("history")) {
-            historyPrint(history, historyLength);
+            historyPrint(history);
         }
-        else if(calculation.equalsIgnoreCase("clearhistory")){
+        else if(calculation.equalsIgnoreCase("clearhistory") ||
+                    calculation.equalsIgnoreCase("historyclear")){
             historyClear(history, historyLength);
         }
         else if (!checkIfValid(calculation).equals("valid")) {
-            System.out.print(calculation);
             System.out.println("\t\t" + errorFinder(checkIfValid(calculation)));
 
             historyFunction(calculationNotClean, errorFinder(checkIfValid(calculation)),
-                    history, historyLength, historyPlacement);
+                    history, historyPlacement, historyLength);
         }
         else {
             String result = calculate(calculation);
 
             if(!errorChecker(result)){
                 System.out.println("\t\t~ Result: " + result);
+
                 historyFunction(calculationNotClean, result, history,
-                        historyLength, historyPlacement);
+                        historyPlacement, historyLength);
             }
             else {
                 System.out.println("\t\t" + errorFinder(result));
+
                 historyFunction(calculationNotClean, errorFinder(result), history,
-                        historyLength, historyPlacement);
+                        historyPlacement, historyLength);
             }
         }
+    }
+
+    public static int getPlacement(File history, int historyLength)
+            throws FileNotFoundException {
+        Scanner historyReader = new Scanner(history);
+
+        for (int count = 0; count <= historyLength - 1; count++) {
+            historyReader.nextLine();
+        }
+        return  Integer.parseInt(historyReader.nextLine());
     }
 
     public static String removeSpaces(String expression) {
@@ -88,43 +102,128 @@ public class AdvancedCalculator {
         System.exit(0);
     }
 
-    public static void historyPrint(String[][] history, int historyLength){
-        System.out.println("\n\t~ History: ");
-        for (int i = 0; i < historyLength; i++) {
-            if (history[i][0] != null)
-                System.out.println("\t\t" + "- " + history[i][0] + history[i][1]);
+    public static void historyFileCreation(File history, int historyLength) throws IOException {
+        if (history.createNewFile()) {
+            FileWriter historyWriter = new FileWriter(history);
+            for (int line = 1; line <= historyLength; line++) {
+                historyWriter.write(line + " = \n");
+            }
+            historyWriter.write("0");
+            historyWriter.close();
+            return;
+        }
+
+        Scanner historyReader = new Scanner(history);
+        String lastLine = "";
+        int count = 0;
+
+        while (historyReader.hasNextLine()){
+            lastLine = historyReader.nextLine();
+            count++;
+        }
+        historyReader.close();
+
+        if (lastLine.isEmpty() || lastLine.substring(0, Character.toString(historyLength).length())
+                .equals(Integer.toString(historyLength + 1)) ||
+                !Character.isDigit(lastLine.charAt(0)) || count != (historyLength + 1)){
+            FileWriter historyWriter = new FileWriter(history);
+
+            for (int line = 1; line <= historyLength; line++) {
+                historyWriter.write(line + " =  \n");
+            }
+            historyWriter.write("0");
+            historyWriter.close();
         }
     }
 
-    public static void historyClear(String[][] history, int historyLength){
-        for (int column = 0; column < 2; column++) {
-            for (int row = 0; row < historyLength; row++) {
-                if(history[row][column] != null) history[row][column] = null;
-                else break;
+    public static void historyClear(File history, int historyLength) throws IOException {
+        FileWriter historyClearer = new FileWriter(history, false);
+        historyClearer.close();
+
+        FileWriter historyWriter = new FileWriter(history);
+
+        for (int line = 1; line <= historyLength; line++) {
+            historyWriter.write(line + " =  \n");
+        }
+        historyWriter.write("0");
+        historyWriter.close();
+
+        System.out.println("\n\t!! History Cleared Successfully !!");
+    }
+
+    public static void historyPrint(File history) throws FileNotFoundException {
+        Scanner historyScanner = new Scanner(history);
+        boolean historyEmpty = true;
+
+        System.out.print("\n\t ~ History:");
+
+        while (historyScanner.hasNextLine()) {
+            String line = historyScanner.nextLine();
+            String validChars = "0123456789+-*/()^.sincostansqrtlnlog!";
+
+            int equalsIndex = line.indexOf('=');
+            if (equalsIndex != -1 && equalsIndex + 1 < line.length()) {
+                char c = line.charAt(equalsIndex + 2);
+
+                if (validChars.indexOf(c) > -1) {
+                    System.out.print("\n\t\t - " + line.substring(line.indexOf(" ")));
+                    historyEmpty = false;
+                }
             }
         }
-        System.out.print("\t\t!! History Cleared !!\n");
+
+        if (historyEmpty) {
+            System.out.print("\t!! History Empty !!");
+        }
+
+        System.out.println();
     }
 
-    public static void historyFunction(String calculationNotClean, String resultAny,
-                                       String[][] history, int historyLength,
-                                       int[] historyPlacement){
-        history[historyPlacement[0]][0] = calculationNotClean;
-        history[historyPlacement[0]][1] = " = " + resultAny;
+    public static void historyFunction(String calculationNotClean, String resultAny , File history,
+                                       int[] historyPlacement, int historyLength) throws IOException {
+        ArrayList<String> lines = new ArrayList<>();
+
+        BufferedReader historyReader = new BufferedReader(new FileReader(history));
+        String line;
+
+        while ((line = historyReader.readLine()) != null) {
+            lines.add(line);
+        }
+        historyReader.close();
+        lines.set(historyPlacement[0], (historyPlacement[0]+1) + " " + calculationNotClean +
+                " = " + resultAny);
+
         historyPlacement[0]++;
-        if(historyPlacement[0] == historyLength) historyPlacement[0] = 0;
+        lines.set(historyLength, String.valueOf(historyPlacement[0]));
+
+        BufferedWriter historyWriter = new BufferedWriter(new FileWriter(history));
+        for (int NewLine = 0; NewLine < lines.size(); NewLine++) {
+            historyWriter.write(lines.get(NewLine));
+            historyWriter.newLine();
+        }
+
+        historyWriter.close();
+
+        if (historyPlacement[0] > historyLength){
+            historyPlacement[0] = 0;
+        }
     }
 
     public static String checkIfValid(String calculation) {
         String validChars = "0123456789+-*/()^.sincostansqrtlnlog";
+        for (int count = 0; count < calculation.length(); count++) {
+            char c = calculation.charAt(count);
 
-        for (int i = 0; i < calculation.length(); i++) {
-            char c = calculation.charAt(i);
             if (calculation.contains("(") && !calculation.contains(")"))
                 return "bracketErr";
+
             else if (validChars.indexOf(c) == -1) {
                 return "improperEntry";
             }
+        }
+
+        if (calculation.isEmpty()){
+            return "improperEntry";
         }
 
         return switch (calculation.charAt(0)) {
@@ -315,7 +414,6 @@ public class AdvancedCalculator {
         boolean inDecimal = false;
         String divisionLeft;
         String divisionRight;
-
 
         for (int multiplicationIndex = 0;
              multiplicationIndex < calculation.length(); multiplicationIndex++) {
