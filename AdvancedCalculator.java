@@ -123,10 +123,12 @@ public class AdvancedCalculator {
         }
         historyReader.close();
 
-        if (lastLine.isEmpty() || lastLine.substring(0, Character.toString(historyLength).length())
+        if (lastLine.isEmpty() || lastLine.length() < String.valueOf(historyLength).length() ||
+                lastLine.substring(0, String.valueOf(historyLength).length())
                 .equals(Integer.toString(historyLength + 1)) ||
                 !Character.isDigit(lastLine.charAt(0)) || count != (historyLength + 1)){
             FileWriter historyWriter = new FileWriter(history);
+
 
             for (int line = 1; line <= historyLength; line++) {
                 historyWriter.write(line + " =  \n");
@@ -162,7 +164,7 @@ public class AdvancedCalculator {
             String validChars = "0123456789+-*/()^.sincostansqrtlnlog!";
 
             int equalsIndex = line.indexOf('=');
-            if (equalsIndex != -1 && equalsIndex + 1 < line.length()) {
+            if (equalsIndex != -1 && equalsIndex + 2 < line.length()) {
                 char c = line.charAt(equalsIndex + 2);
 
                 if (validChars.indexOf(c) > -1) {
