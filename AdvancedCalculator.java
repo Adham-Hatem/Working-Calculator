@@ -162,7 +162,7 @@ public class AdvancedCalculator {
 
         while (historyScanner.hasNextLine()) {
             String line = historyScanner.nextLine();
-            String validChars = "0123456789+-*/()^.sincostansqrtlnlog!";
+            String validChars = "0123456789+-*/()^.sincostanrtlnlog!";
 
             int equalsIndex = line.indexOf('=');
             if (equalsIndex != -1 && equalsIndex + 2 < line.length()) {
@@ -213,7 +213,7 @@ public class AdvancedCalculator {
     }
 
     public static String checkIfValid(String calculation) {
-        String validChars = "0123456789+-*/()^%.sincostansqrtlnlog";
+        String validChars = "0123456789+-*/()^%.sincostanrtlnlog";
         for (int count = 0; count < calculation.length(); count++) {
             char c = calculation.charAt(count);
 
