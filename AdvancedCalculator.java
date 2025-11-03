@@ -398,8 +398,9 @@ public class AdvancedCalculator {
             int leftStart = ModuloIndex - 1;
             int rightEnd = ModuloIndex + 1;
 
-            if (leftStart < 0 || !Character.isDigit(calculation.charAt(leftStart)) ||
-                    !Character.isDigit(calculation.charAt(rightEnd)))
+            if (leftStart < 0 || rightEnd == calculation.length() 
+                    || !Character.isDigit(calculation.charAt(leftStart)) 
+                    || !Character.isDigit(calculation.charAt(rightEnd)))
                 return "ModuloErr";
 
             while (leftStart > 0 && (Character.isDigit(calculation.charAt(leftStart - 1)) ||
