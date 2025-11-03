@@ -18,7 +18,7 @@ public class AdvancedCalculator {
             System.out.print("\n> Enter your Command: ");
             String calculationNotClean = console.nextLine();
 
-            userChoice(calculationNotClean, history ,historyLength, historyPlacement);
+            userChoice(calculationNotClean, history, historyLength, historyPlacement);
         }
     }
 
@@ -35,7 +35,8 @@ public class AdvancedCalculator {
                         "\n\t - Subtraction > - <" +
                         "\n\t - Addition > + <" +
                         "\n\t - Power > ^ <" +
-                        "\n\t - SquareRoot > sqrt <" +
+                        "\n\t - Root > {num}rt <" +
+                        "\n\t - Modulus > % <" +
                         "\n\t - Logarithmic Operations > Log, ln <" +
                         "\n\t - Trigonometric Functions > sin, cos, tan <\n\t");
                 break;
@@ -212,7 +213,7 @@ public class AdvancedCalculator {
     }
 
     public static String checkIfValid(String calculation) {
-        String validChars = "0123456789+-*/()^.sincostansqrtlnlog";
+        String validChars = "0123456789+-*/()^%.sincostansqrtlnlog";
         for (int count = 0; count < calculation.length(); count++) {
             char c = calculation.charAt(count);
 
@@ -246,7 +247,8 @@ public class AdvancedCalculator {
             case "complexErr" -> "!! Error : Complex Error !!";
             case "placementErr" -> "!! Error : Placement Error !!";
             case "bracketErr" -> "!! Error : Bracket Error !!";
-            case "sqrtErr" -> "!! Error : Square Root Error !!";
+            case "rtErr" -> "!! Error : Root Error !!";
+            case "ModuloErr" -> "!! Error : Modulus Error !!";
             case "improperEntry" -> "!! Error : Improper Entry !!";
             default -> null;
         };
@@ -255,7 +257,7 @@ public class AdvancedCalculator {
     public static boolean errorChecker(String result){
         return switch (result) {
             case "functionErr", "powerErr", "zeroDivision", "complexErr", "placementErr",
-                 "multiplicationErr", "bracketErr" ,"sqrtErr", "improperEntry" -> true;
+                 "multiplicationErr", "ModuloErr", "bracketErr" ,"rtErr", "improperEntry" -> true;
             default -> false;
         };
     }
@@ -278,13 +280,17 @@ public class AdvancedCalculator {
 
         if (errorChecker(calculation)) return calculation;
 
+        calculation = calculateModulus(calculation);
+
+        if (errorChecker(calculation)) return calculation;
+
         return calculateSimple(calculation);
     }
 
     public static String calculateFunctions(String calculation) {
         String[] trigFunctions = {"sin", "cos", "tan"};
         String[] logFunctions = {"log", "ln"};
-        String[] sqrtFunctions = {"sqrt"};
+        String[] rtFunctions = {"rt"};
         String letters = "abcdefghijklmnopqrstuvwxyz";
 
         for (String function : trigFunctions) {
@@ -341,27 +347,38 @@ public class AdvancedCalculator {
             }
         }
 
-        for (String function : sqrtFunctions) {
+        for (String function : rtFunctions) {
             while (calculation.contains(function)) {
                 int functionIndex = calculation.indexOf(function);
-                int sqrtLeft = functionIndex + function.length();
-                int sqrtRight = sqrtLeft;
+                int degreeStart = functionIndex - 1;
+                int degreeEnd = degreeStart + 1;
+                int rootLeft = functionIndex + function.length();
+                int rootRight = rootLeft;
 
-                while (sqrtRight < calculation.length()
-                        && (Character.isDigit(calculation.charAt(sqrtRight))
-                        || calculation.charAt(sqrtRight) == '.')) {
-                    sqrtRight++;
+                while (rootRight < calculation.length()
+                        && (Character.isDigit(calculation.charAt(rootRight))
+                        || calculation.charAt(rootRight) == '.')) {
+                    rootRight++;
                 }
 
-                if (!Character.isDigit(calculation.charAt(sqrtRight - 1))
-                        || calculation.charAt(sqrtLeft) == '-')
-                    return "sqrtErr";
+                if (!Character.isDigit(calculation.charAt(rootRight - 1))
+                        || calculation.charAt(rootLeft) == '-' || degreeStart < 0
+                        || !Character.isDigit(calculation.charAt(degreeEnd - 1)))
+                    return "rtErr";
 
-                double value = Double.parseDouble(calculation.substring(sqrtLeft, sqrtRight));
+                while (degreeStart < calculation.length() && (degreeStart != 0
+                        && Character.isDigit(calculation.charAt(degreeStart - 1)))
+                        && (Character.isDigit(calculation.charAt(degreeStart))
+                        || calculation.charAt(degreeStart) == '.')) {
+                    degreeStart--;
+                }
 
-                double sqrtResult = Math.sqrt(value);
-                calculation = calculation.substring(0, functionIndex)
-                        + sqrtResult + calculation.substring(sqrtRight);
+                double degree = Double.parseDouble(calculation.substring(degreeStart, degreeEnd));
+                double value = Double.parseDouble(calculation.substring(rootLeft, rootRight));
+                double rtResult = Math.pow(value, 1/degree);
+
+                calculation = calculation.substring(0, degreeStart)
+                        + rtResult + calculation.substring(rootRight);
             }
         }
 
@@ -370,6 +387,39 @@ public class AdvancedCalculator {
 
             if (letters.indexOf(character) != -1)
                 return "improperEntry";
+        }
+
+        return calculation;
+    }
+
+    public static String calculateModulus(String calculation) {
+        while (calculation.contains("%")) {
+            int ModuloIndex = calculation.indexOf("%");
+            int leftStart = ModuloIndex - 1;
+            int rightEnd = ModuloIndex + 1;
+
+            if (leftStart < 0 || !Character.isDigit(calculation.charAt(leftStart)) ||
+                    !Character.isDigit(calculation.charAt(rightEnd)))
+                return "ModuloErr";
+
+            while (leftStart > 0 && (Character.isDigit(calculation.charAt(leftStart - 1)) ||
+                    calculation.charAt(leftStart - 1) == '.')) {
+                leftStart--;
+            }
+
+            while (rightEnd < calculation.length()
+                    && (Character.isDigit(calculation.charAt(rightEnd))
+                    || calculation.charAt(rightEnd) == '.')) {
+                rightEnd++;
+            }
+
+            double LHS = Double.parseDouble(calculation.substring(leftStart, ModuloIndex));
+            double RHS = Double.parseDouble(calculation.substring(ModuloIndex + 1, rightEnd));
+
+            double ModuloResult = LHS % RHS;
+
+            calculation = calculation.substring(0, leftStart)
+                    + ModuloResult + calculation.substring(rightEnd);
         }
 
         return calculation;
