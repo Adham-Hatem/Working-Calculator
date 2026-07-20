@@ -2,7 +2,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-@SuppressWarnings({"InfiniteLoopStatement", "DuplicatedCode", "TextBlockMigration", "ForLoopReplaceableByForEach"})
+@SuppressWarnings({ "InfiniteLoopStatement", "DuplicatedCode", "TextBlockMigration", "ForLoopReplaceableByForEach" })
 public class AdvancedCalculator {
     public static void main(String[] args) throws IOException {
         Scanner console = new Scanner(System.in);
@@ -10,19 +10,20 @@ public class AdvancedCalculator {
         File history = new File("history.txt");
         int historyLength = 5;
         historyFileCreation(history, historyLength);
-        int[] historyPlacement = {getPlacement(history, historyLength)};
+        int[] historyPlacement = { getPlacement(history, historyLength) };
 
         commands("start");
 
         while (true) {
             System.out.print("\n> Enter your Command: ");
+
             String calculationNotClean = console.nextLine();
 
-            userChoice(calculationNotClean, history, historyLength, historyPlacement);
+            userChoice(calculationNotClean, history, historyLength, historyPlacement, console);
         }
     }
 
-    public static void commands(String instance){
+    public static void commands(String instance) {
         switch (instance) {
             case "start":
                 System.out.print("\n\t~ Commands:\n\t - Commands\n\t - History" +
@@ -44,38 +45,34 @@ public class AdvancedCalculator {
     }
 
     public static void userChoice(String calculationNotClean, File history,
-                                  int historyLength, int[] historyPlacement) throws IOException {
+            int historyLength, int[] historyPlacement, Scanner console) throws IOException {
         String calculation = removeSpaces(calculationNotClean);
 
         if (calculation.equalsIgnoreCase("bye")) {
-            exit();
-        }
-        else if(calculation.equalsIgnoreCase("commands")){
+            exit(console);
+        } else if (calculation.equalsIgnoreCase("commands")
+                || calculation.equalsIgnoreCase("help")
+                || calculation.equalsIgnoreCase("?")) {
             commands("implemented");
-        }
-        else if (calculation.equalsIgnoreCase("history")) {
+        } else if (calculation.equalsIgnoreCase("history")) {
             historyPrint(history);
-        }
-        else if(calculation.equalsIgnoreCase("clearhistory") ||
-                    calculation.equalsIgnoreCase("historyclear")){
+        } else if (calculation.equalsIgnoreCase("clearhistory") ||
+                calculation.equalsIgnoreCase("historyclear")) {
             historyClear(history, historyLength);
-        }
-        else if (!checkIfValid(calculation).equals("valid")) {
+        } else if (!checkIfValid(calculation).equals("valid")) {
             System.out.println("\t\t" + errorFinder(checkIfValid(calculation)));
 
             historyFunction(calculationNotClean, errorFinder(checkIfValid(calculation)),
                     history, historyPlacement, historyLength);
-        }
-        else {
+        } else {
             String result = calculate(calculation);
 
-            if(!errorChecker(result)){
+            if (!errorChecker(result)) {
                 System.out.println("\t\t~ Result: " + result);
 
                 historyFunction(calculationNotClean, result, history,
                         historyPlacement, historyLength);
-            }
-            else {
+            } else {
                 System.out.println("\t\t" + errorFinder(result));
 
                 historyFunction(calculationNotClean, errorFinder(result), history,
@@ -91,14 +88,21 @@ public class AdvancedCalculator {
         for (int count = 0; count <= historyLength - 1; count++) {
             historyReader.nextLine();
         }
-        return  Integer.parseInt(historyReader.nextLine());
+
+        int placement = Integer.parseInt(historyReader.nextLine());
+
+        historyReader.close();
+
+        return placement;
     }
 
     public static String removeSpaces(String expression) {
         return expression.toLowerCase().replaceAll(" ", "");
     }
 
-    public static void exit() {
+    public static void exit(Scanner console) {
+        console.close();
+
         System.out.print("\n\t\t\t~ Bye Bye ~");
         System.exit(0);
     }
@@ -118,7 +122,7 @@ public class AdvancedCalculator {
         String lastLine = "";
         int count = 0;
 
-        while (historyReader.hasNextLine()){
+        while (historyReader.hasNextLine()) {
             lastLine = historyReader.nextLine();
             count++;
         }
@@ -126,10 +130,10 @@ public class AdvancedCalculator {
 
         if (lastLine.isEmpty() || lastLine.length() < String.valueOf(historyLength).length() ||
                 lastLine.substring(0, String.valueOf(historyLength).length())
-                .equals(Integer.toString(historyLength + 1)) ||
-                !Character.isDigit(lastLine.charAt(0)) || count != (historyLength + 1)){
+                        .equals(Integer.toString(historyLength + 1))
+                ||
+                !Character.isDigit(lastLine.charAt(0)) || count != (historyLength + 1)) {
             FileWriter historyWriter = new FileWriter(history);
-
 
             for (int line = 1; line <= historyLength; line++) {
                 historyWriter.write(line + " =  \n");
@@ -180,10 +184,12 @@ public class AdvancedCalculator {
         }
 
         System.out.println();
+
+        historyScanner.close();
     }
 
-    public static void historyFunction(String calculationNotClean, String resultAny , File history,
-                                       int[] historyPlacement, int historyLength) throws IOException {
+    public static void historyFunction(String calculationNotClean, String resultAny, File history,
+            int[] historyPlacement, int historyLength) throws IOException {
         ArrayList<String> lines = new ArrayList<>();
 
         BufferedReader historyReader = new BufferedReader(new FileReader(history));
@@ -193,7 +199,7 @@ public class AdvancedCalculator {
             lines.add(line);
         }
         historyReader.close();
-        lines.set(historyPlacement[0], (historyPlacement[0]+1) + " " + calculationNotClean +
+        lines.set(historyPlacement[0], (historyPlacement[0] + 1) + " " + calculationNotClean +
                 " = " + resultAny);
 
         historyPlacement[0]++;
@@ -207,7 +213,7 @@ public class AdvancedCalculator {
 
         historyWriter.close();
 
-        if (historyPlacement[0] > historyLength){
+        if (historyPlacement[0] > historyLength) {
             historyPlacement[0] = 0;
         }
     }
@@ -225,23 +231,23 @@ public class AdvancedCalculator {
             }
         }
 
-        if (calculation.isEmpty()){
+        if (calculation.isEmpty()) {
             return "improperEntry";
         }
 
         return switch (calculation.charAt(0)) {
             case '/', '*', '^' -> "placementErr";
-            default -> switch (calculation.charAt(calculation.length()-1)) {
+            default -> switch (calculation.charAt(calculation.length() - 1)) {
                 case '/', '*', '^', 't' -> "placementErr";
                 default -> "valid";
             };
         };
     }
 
-    public static String errorFinder(String result){
+    public static String errorFinder(String result) {
         return switch (result) {
             case "functionErr" -> "!! Error : Function Error !!";
-            case "powerErr" ->  "!! Error : Power Error !!";
+            case "powerErr" -> "!! Error : Power Error !!";
             case "multiplicationErr" -> "!! Error : Multiplication Error !!";
             case "zeroDivision" -> "!! Error : Zero Division !!";
             case "complexErr" -> "!! Error : Complex Error !!";
@@ -254,10 +260,11 @@ public class AdvancedCalculator {
         };
     }
 
-    public static boolean errorChecker(String result){
+    public static boolean errorChecker(String result) {
         return switch (result) {
             case "functionErr", "powerErr", "zeroDivision", "complexErr", "placementErr",
-                 "multiplicationErr", "ModuloErr", "bracketErr" ,"rtErr", "improperEntry" -> true;
+                    "multiplicationErr", "ModuloErr", "bracketErr", "rtErr", "improperEntry" ->
+                true;
             default -> false;
         };
     }
@@ -274,23 +281,26 @@ public class AdvancedCalculator {
 
         calculation = calculateFunctions(calculation);
 
-        if (errorChecker(calculation)) return calculation;
+        if (errorChecker(calculation))
+            return calculation;
 
         calculation = calculatePower(calculation);
 
-        if (errorChecker(calculation)) return calculation;
+        if (errorChecker(calculation))
+            return calculation;
 
         calculation = calculateModulus(calculation);
 
-        if (errorChecker(calculation)) return calculation;
+        if (errorChecker(calculation))
+            return calculation;
 
         return calculateSimple(calculation);
     }
 
     public static String calculateFunctions(String calculation) {
-        String[] trigFunctions = {"sin", "cos", "tan"};
-        String[] logFunctions = {"log", "ln"};
-        String[] rtFunctions = {"rt"};
+        String[] trigFunctions = { "sin", "cos", "tan" };
+        String[] logFunctions = { "log", "ln" };
+        String[] rtFunctions = { "rt" };
         String letters = "abcdefghijklmnopqrstuvwxyz";
 
         for (String function : trigFunctions) {
@@ -301,13 +311,15 @@ public class AdvancedCalculator {
 
                 while (endIndex < calculation.length()
                         && (Character.isDigit(calculation.charAt(endIndex))
-                        || calculation.charAt(endIndex) == '.')) {
+                                || calculation.charAt(endIndex) == '.')) {
                     endIndex++;
                 }
 
-                if (calculation.substring(startIndex, endIndex).isEmpty()) return "functionErr";
+                if (calculation.substring(startIndex, endIndex).isEmpty())
+                    return "functionErr";
                 double angle = Double.parseDouble(calculation.substring(startIndex, endIndex));
-                if (angle == 90 && function.equals("tan")) return "complexErr";
+                if (angle == 90 && function.equals("tan"))
+                    return "complexErr";
 
                 double trigResult = switch (function) {
                     case "sin" -> Math.sin(Math.toRadians(angle));
@@ -330,7 +342,7 @@ public class AdvancedCalculator {
 
                 while (endIndex < calculation.length()
                         && (Character.isDigit(calculation.charAt(endIndex)) ||
-                        calculation.charAt(endIndex) == '.')) {
+                                calculation.charAt(endIndex) == '.')) {
                     endIndex++;
                 }
 
@@ -357,7 +369,7 @@ public class AdvancedCalculator {
 
                 while (rootRight < calculation.length()
                         && (Character.isDigit(calculation.charAt(rootRight))
-                        || calculation.charAt(rootRight) == '.')) {
+                                || calculation.charAt(rootRight) == '.')) {
                     rootRight++;
                 }
 
@@ -369,13 +381,13 @@ public class AdvancedCalculator {
                 while (degreeStart < calculation.length() && (degreeStart != 0
                         && Character.isDigit(calculation.charAt(degreeStart - 1)))
                         && (Character.isDigit(calculation.charAt(degreeStart))
-                        || calculation.charAt(degreeStart) == '.')) {
+                                || calculation.charAt(degreeStart) == '.')) {
                     degreeStart--;
                 }
 
                 double degree = Double.parseDouble(calculation.substring(degreeStart, degreeEnd));
                 double value = Double.parseDouble(calculation.substring(rootLeft, rootRight));
-                double rtResult = Math.pow(value, 1/degree);
+                double rtResult = Math.pow(value, 1 / degree);
 
                 calculation = calculation.substring(0, degreeStart)
                         + rtResult + calculation.substring(rootRight);
@@ -398,8 +410,8 @@ public class AdvancedCalculator {
             int leftStart = ModuloIndex - 1;
             int rightEnd = ModuloIndex + 1;
 
-            if (leftStart < 0 || rightEnd == calculation.length() 
-                    || !Character.isDigit(calculation.charAt(leftStart)) 
+            if (leftStart < 0 || rightEnd == calculation.length()
+                    || !Character.isDigit(calculation.charAt(leftStart))
                     || !Character.isDigit(calculation.charAt(rightEnd)))
                 return "ModuloErr";
 
@@ -410,7 +422,7 @@ public class AdvancedCalculator {
 
             while (rightEnd < calculation.length()
                     && (Character.isDigit(calculation.charAt(rightEnd))
-                    || calculation.charAt(rightEnd) == '.')) {
+                            || calculation.charAt(rightEnd) == '.')) {
                 rightEnd++;
             }
 
@@ -443,7 +455,7 @@ public class AdvancedCalculator {
 
             while (rightEnd < calculation.length()
                     && (Character.isDigit(calculation.charAt(rightEnd))
-                    || calculation.charAt(rightEnd) == '.')) {
+                            || calculation.charAt(rightEnd) == '.')) {
                 rightEnd++;
             }
 
@@ -468,17 +480,16 @@ public class AdvancedCalculator {
         String divisionLeft;
         String divisionRight;
 
-        for (int multiplicationIndex = 0;
-             multiplicationIndex < calculation.length(); multiplicationIndex++) {
+        for (int multiplicationIndex = 0; multiplicationIndex < calculation.length(); multiplicationIndex++) {
             char chosenChar = calculation.charAt(multiplicationIndex);
 
-            if (chosenChar == '*'){
+            if (chosenChar == '*') {
                 int multiplicationLeft = multiplicationIndex - 1;
                 int multiplicationRight = multiplicationIndex + 2;
 
                 while (multiplicationLeft > 0
                         && (Character.isDigit(calculation.charAt(multiplicationLeft))
-                        || calculation.charAt(multiplicationLeft) == '.')) {
+                                || calculation.charAt(multiplicationLeft) == '.')) {
                     multiplicationLeft--;
                 }
 
@@ -487,12 +498,12 @@ public class AdvancedCalculator {
 
                 while (multiplicationRight < calculation.length()
                         && (Character.isDigit(calculation.charAt(multiplicationRight - 1))
-                        || calculation.charAt(multiplicationRight - 1) == '.')
+                                || calculation.charAt(multiplicationRight - 1) == '.')
                         || calculation.charAt(multiplicationRight - 1) == '-') {
                     multiplicationRight++;
                 }
 
-                while (!Character.isDigit(calculation.charAt(multiplicationRight-1))){
+                while (!Character.isDigit(calculation.charAt(multiplicationRight - 1))) {
                     multiplicationRight--;
                 }
 
@@ -503,16 +514,15 @@ public class AdvancedCalculator {
                         if (!Character.isDigit(calculation.charAt(multiplicationIndex + 1)))
                             return "multiplicationErr";
 
-                double leftHandSide = Double.parseDouble(calculation.substring
-                        (multiplicationLeft, multiplicationIndex));
+                double leftHandSide = Double
+                        .parseDouble(calculation.substring(multiplicationLeft, multiplicationIndex));
 
-                double rightHandSide = Double.parseDouble(calculation.substring
-                        (multiplicationIndex + 1, multiplicationRight));
+                double rightHandSide = Double
+                        .parseDouble(calculation.substring(multiplicationIndex + 1, multiplicationRight));
 
                 double multiplicationResult = leftHandSide * rightHandSide;
 
-                calculation = calculation.substring
-                        (0, multiplicationLeft) + multiplicationResult
+                calculation = calculation.substring(0, multiplicationLeft) + multiplicationResult
                         + calculation.substring(multiplicationRight);
             }
         }
@@ -524,18 +534,15 @@ public class AdvancedCalculator {
                 if (inDecimal) {
                     currentNumber += (chosenChar - '0') * decimalPlace;
                     decimalPlace *= 0.1;
-                }
-                else {
+                } else {
                     currentNumber = currentNumber * 10 + (chosenChar - '0');
                 }
-            }
-            else if (chosenChar == '.') {
+            } else if (chosenChar == '.') {
                 inDecimal = true;
                 decimalPlace = 0.1;
-            }
-            else if (chosenChar == '/') {
+            } else if (chosenChar == '/') {
                 divisionLeft = calculation.substring(0, calculation.indexOf('/'));
-                divisionRight = calculation.substring(calculation.indexOf('/')+1);
+                divisionRight = calculation.substring(calculation.indexOf('/') + 1);
 
                 divisionLeft = calculateSimple(divisionLeft);
                 divisionRight = calculateSimple(divisionRight);
@@ -543,19 +550,16 @@ public class AdvancedCalculator {
                 if (divisionRight.equals("0.0"))
                     return "zeroDivision";
 
-                return Double.toString(Double.parseDouble
-                        (divisionLeft)/Double.parseDouble(divisionRight));
-            }
-            else if (operator(chosenChar)) {
+                return Double.toString(Double.parseDouble(divisionLeft) / Double.parseDouble(divisionRight));
+            } else if (operator(chosenChar)) {
                 String resultString = applyOperation(result, currentNumber, lastOperator);
-                if (errorFinder(resultString) == null){
-                    result = Double.parseDouble
-                            (applyOperation(result, currentNumber, lastOperator));
+                if (errorFinder(resultString) == null) {
+                    result = Double.parseDouble(applyOperation(result, currentNumber, lastOperator));
                     currentNumber = 0;
                     inDecimal = false;
                     lastOperator = chosenChar;
-                }
-                else return resultString;
+                } else
+                    return resultString;
             }
         }
 
